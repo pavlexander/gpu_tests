@@ -25,7 +25,12 @@ namespace ProccessorImplementation
 
         public override void Proccess()
         {
-            _wrapper.Execute(resultsBytes, ref calculatables, DataGenerator.In1, DataGenerator.In2, DataGenerator.In3, DataGenerator.In4_3_bytes, DataGenerator.InputCount, DataGenerator.Width, DataGenerator.Height);
+            int result = _wrapper.Execute(resultsBytes, ref calculatables, DataGenerator.In1, DataGenerator.In2, DataGenerator.In3, DataGenerator.In4_3_bytes, DataGenerator.InputCount, DataGenerator.Width, DataGenerator.Height);
+
+            if (result != 0)
+            {
+                Console2.WriteLineRed("Kernel did not return a success status code. Exception?");
+            }
         }
     }
 }

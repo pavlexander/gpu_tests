@@ -1,7 +1,8 @@
 #pragma once
 #include <iostream>
 //#using <mscorlib.dll>
-#include "../CudaLib/main.h"
+//#include "../CudaLib/main.h"
+#include "../CudaLib/kernel.h"
 
 using namespace System;
 
@@ -12,7 +13,7 @@ namespace CLRLib {
 	private:
 	public:
 		// % = reference
-		void Execute(
+		int Execute(
 			array<System::Byte>^ output,
 			array<System::Double>^% outputCalc,
 
@@ -28,27 +29,27 @@ namespace CLRLib {
 		{
 			pin_ptr<unsigned char> h_output = &output[0];
 			unsigned char* h_outputPtr = h_output;
-			int output_size = output->Length;
+			size_t output_size = output->Length;
 
 			pin_ptr<double> h_outputCalc = &outputCalc[0];
 			double* h_outputCalcPtr = h_outputCalc;
-			int outputCalc_size = outputCalc->Length;
+			size_t outputCalc_size = outputCalc->Length;
 
 			pin_ptr<int> h_in1 = &in1[0];
 			int* h_in1Ptr = h_in1;
-			int in1_size = in1->Length;
+			size_t in1_size = in1->Length;
 
 			pin_ptr<int> h_in2 = &in2[0];
 			int* h_in2Ptr = h_in2;
-			int in2_size = in2->Length;
+			size_t in2_size = in2->Length;
 
 			pin_ptr<double> h_in3 = &in3[0];
 			double* h_in3Ptr = h_in3;
-			int in3_size = in3->Length;
+			size_t in3_size = in3->Length;
 
 			pin_ptr<unsigned char> h_in4 = &in4[0];
 			unsigned char* h_in4Ptr = h_in4;
-			int in4_size = in4->Length;
+			size_t in4_size = in4->Length;
 
 			int h_inputCount = inputCount;
 			int h_width = width;
@@ -65,13 +66,15 @@ namespace CLRLib {
 			//System::Console::WriteLine(h_width);
 			//System::Console::WriteLine(h_height);
 			
-			CudaProccess(h_outputPtr, output_size,
+			int result = CudaProccess(h_outputPtr, output_size,
 				h_outputCalcPtr, outputCalc_size,
 				h_in1Ptr, in1_size,
 				h_in2Ptr, in2_size,
 				h_in3Ptr, in3_size,
 				h_in4Ptr, in4_size,
 				h_inputCount, h_width, h_height);
+
+			return result;
 		};
 	};
 }

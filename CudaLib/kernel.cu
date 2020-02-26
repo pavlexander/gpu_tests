@@ -181,20 +181,20 @@ __global__ void proccess2(
 	outputCalc[index] = 15.4;
 }
 
-void CudaProccess(
+int CudaProccess(
 	unsigned char* output,
-	const int output_size,
+	const size_t output_size, // unsigned int
 	double* outputCalc,
-	const int outputCalc_size,
+	const size_t outputCalc_size,
 
 	const int* in1,
-	const int in1_size,
+	const size_t in1_size,
 	const int* in2,
-	const int in2_size,
+	const size_t in2_size,
 	const double* in3,
-	const int in3_size,
+	const size_t in3_size,
 	const unsigned char* in4,
-	const int in4_size,
+	const size_t in4_size,
 
 	const int inputCount,
 	const int width,
@@ -229,12 +229,12 @@ void CudaProccess(
 
 	// calculate native total sizes
 	//int constSize = sizeof(int);
-	int output_totalSize = output_size * sizeof(unsigned char);
-	int outputCalc_totalSize = outputCalc_size * sizeof(double);
-	int in1_totalSize = in1_size * sizeof(int);
-	int in2_totalSize = in2_size * sizeof(int);
-	int in3_totalSize = in3_size * sizeof(double); // TBD: issue?
-	int in4_totalSize = in4_size * sizeof(unsigned char);
+	unsigned int output_totalSize = output_size * sizeof(unsigned char);
+	unsigned int outputCalc_totalSize = outputCalc_size * sizeof(double);
+	unsigned int in1_totalSize = in1_size * sizeof(int);
+	unsigned int in2_totalSize = in2_size * sizeof(int);
+	unsigned int in3_totalSize = in3_size * sizeof(double); // TBD: issue?
+	unsigned int in4_totalSize = in4_size * sizeof(unsigned char);
 
 	// allocate memory for device variables
 	cudaMalloc((void**)&d_output, output_totalSize);
@@ -271,6 +271,9 @@ void CudaProccess(
 	//proccess << <inputCount, 1 >> > (d_output, d_outputCalc, d_in1, d_in2, d_in3, d_in4, inputCount, width, height);
 	//proccess2 KERNEL_ARGS2(40, 1) (d_output, d_outputCalc);
 
+	// make the host block until the device is finished with foo
+	cudaDeviceSynchronize();
+
 	//
 	// Copy output array from GPU back to CPU.
 	//
@@ -293,4 +296,18 @@ void CudaProccess(
 	cudaFree(d_in2);
 	cudaFree(d_in3);
 	cudaFree(d_in4);
+
+	// check for error
+	// https://stackoverflow.com/questions/14038589/what-is-the-canonical-way-to-check-for-errors-using-the-cuda-runtime-api
+	cudaError_t error = cudaGetLastError();
+	if (error != cudaSuccess)
+	{
+		// print the CUDA error message and exit
+		printf("CUDA error name: %s\n", cudaGetErrorName(error));
+		printf("CUDA error description: %s\n", cudaGetErrorString(error));
+		//exit(-1);
+		return -1;
+	}
+
+	return 0;
 }
