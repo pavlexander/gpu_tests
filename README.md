@@ -8,11 +8,21 @@ Testing computations on GPU, using OpenCl, CUDA, in future maybe Vulkan. All of 
 * .Net Core 3.1
 * Cuda 10.2
 
+## Building
+
+Until I learn how to commit build configuration in git, you will have to set following config, in order to things start working out-of-the-box.
+
+![Image of build configuration](buildConfig.png)
+
+Also, CUDA will perform a lot faster, when optimizations are applied, so I also recommend setting the following:
+
+![Image of build configuration](buildConfig2.png)
+
 ## Performance
 
 Current results (25.02.2020):
 
-![Image of Yaktocat](results.png)
+![Image of results](results.png)
 
 ```diff
 - Current issues (25.02.2020):

@@ -79,9 +79,9 @@
 // todo: use 1D array instead of 2D
 extern "C"
 {
-	__device__ __constant__ int width;
-	__device__ __constant__ int inputCount;
-	__device__ __constant__ int height;
+	//__device__ __constant__ int width;
+	//__device__ __constant__ int inputCount;
+	//__device__ __constant__ int height;
 
 	//kernel code
 	__global__ void proccess(
