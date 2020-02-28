@@ -19,12 +19,7 @@
     <ProjectReference Include="..\Impl_CPU\Impl_CPU.csproj" />
     <ProjectReference Include="..\Impl_ILGPU\Impl_ILGPU.csproj" />
     <ProjectReference Include="..\Impl_ManagedCuda\Impl_ManagedCuda.csproj" />
-    <ProjectReference Include="..\Impl_NativeCudaPInvoke\Impl_NativeCudaPInvoke.csproj" />
     <ProjectReference Include="..\Impl_NativeCuda\Impl_NativeCuda.csproj" />
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy /Y &quot;$(SolutionDir)x64\Release\CudaLibNativeWrapper.dll&quot; &quot;$(OutDir)\CudaLibNativeWrapper.dll&quot;" />
-  </Target>
 
 </Project>
