@@ -32,7 +32,7 @@ Results (25.02.2020) (old):
 
 Results (28.02.2020). Found the issue. It was the wrong number in grid/block size. After correction everything performs very well.
 
-![Image of results](resultsnew.png)
+![Image of results](resultsNew.png)
 
 Also worth mentioning, that writing a wrapper is more complicated than writing the managedCuda code.
 Also, writing the managedCuda code is a bit harder than writing IlGPU code.
