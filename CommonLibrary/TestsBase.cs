@@ -79,6 +79,7 @@ namespace CommonLibrary
                 baselineCalculatable = calculatable;
 
                 _isPreviouslyProcessed = true;
+                Console.WriteLine($"Baseline calculatable is: {calculatable}");
             }
         }
 

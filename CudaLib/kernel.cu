@@ -5,12 +5,12 @@
 #include <builtin_types.h> 
 #include <vector_functions.h>
 
-#include <cassert>
-#include <cstdio>
-#include <cfloat>
-#include <cinttypes>
-#include <algorithm>
-#include <memory>
+//#include <cassert>
+//#include <cstdio>
+//#include <cfloat>
+//#include <cinttypes>
+//#include <algorithm>
+//#include <memory>
 //#include <curand_kernel.h>
 
 //#include "float.h"
@@ -237,12 +237,16 @@ int CudaProccess(
 	unsigned int in4_totalSize = in4_size * sizeof(unsigned char);
 
 	// allocate memory for device variables
-	cudaMalloc((void**)&d_output, output_totalSize);
-	cudaMalloc((void**)&d_outputCalc, outputCalc_totalSize);
-	cudaMalloc((void**)&d_in1, in1_totalSize);
-	cudaMalloc((void**)&d_in2, in2_totalSize);
-	cudaMalloc((void**)&d_in3, in3_totalSize);
-	cudaMalloc((void**)&d_in4, in4_totalSize);
+	cudaMalloc(&d_output, output_totalSize);
+	cudaMalloc(&d_outputCalc, outputCalc_totalSize);
+	cudaMalloc(&d_in1, in1_totalSize);
+	cudaMalloc(&d_in2, in2_totalSize);
+	cudaMalloc(&d_in3, in3_totalSize);
+	cudaMalloc(&d_in4, in4_totalSize);
+	
+	// Allocate Unified Memory – accessible from CPU or GPU
+	//cudaMallocManaged(&output, output_totalSize);
+	//cudaMallocManaged(&outputCalc, outputCalc_totalSize);
 
 	// write host -> device
 	cudaMemcpy(d_in1, in1, in1_totalSize, cudaMemcpyHostToDevice);
@@ -267,11 +271,14 @@ int CudaProccess(
 	//dim3 dimBlock(inputCount, 1);
 	//dim3 dimGrid(1, 1);
 	//proccess KERNEL_ARGS2(dimGrid, dimBlock) (d_output, d_outputCalc, d_in1, d_in2, d_in3, d_in4, inputCount, width, height);
-	proccess KERNEL_ARGS2(inputCount, 1) (d_output, d_outputCalc, d_in1, d_in2, d_in3, d_in4, inputCount, width, height);
+	//proccess KERNEL_ARGS2(inputCount, 1) (d_output, d_outputCalc, d_in1, d_in2, d_in3, d_in4, inputCount, width, height);
 	//proccess << <inputCount, 1 >> > (d_output, d_outputCalc, d_in1, d_in2, d_in3, d_in4, inputCount, width, height);
+	int blockDimensions = 256;
+	int gridDimensions = (inputCount + blockDimensions - 1) / blockDimensions;
+	proccess << <gridDimensions, blockDimensions >> > (d_output, d_outputCalc, d_in1, d_in2, d_in3, d_in4, inputCount, width, height);
 	//proccess2 KERNEL_ARGS2(40, 1) (d_output, d_outputCalc);
 
-	// make the host block until the device is finished with foo
+	// Wait for GPU to finish before accessing on host
 	cudaDeviceSynchronize();
 
 	//

@@ -20,7 +20,7 @@ Also, CUDA will perform a lot faster, when optimizations are applied, so I also 
 
 ## Performance
 
-Current results (25.02.2020):
+Results (25.02.2020) (old):
 
 ![Image of results](results.png)
 
@@ -29,6 +29,15 @@ Current results (25.02.2020):
 ```
 
 * Native Cuda code launcher is slower than most of the methods, except the CPU. At the same time - ManagedCuda performs very well, despite using the same base as native.. Something wrong with the compiler settings??
+
+Results (28.02.2020). Found the issue. It was the wrong number in grid/block size. After correction everything performs very well.
+
+![Image of results](resultsnew.png)
+
+Also worth mentioning, that writing a wrapper is more complicated than writing the managedCuda code.
+Also, writing the managedCuda code is a bit harder than writing IlGPU code.
+Also, writing OpenCL will make your code available on Radeon video cards, by sacrificing a tiny little bit of performance..
+The choice is hard. 
 
 ### Settings:
 
