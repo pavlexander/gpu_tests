@@ -8,9 +8,9 @@ namespace CommonLibrary
 {
     public abstract class TestsBase : ITestsBase
     {
-        protected bool[] results;
-        protected byte[] resultsBytes;
-        protected double[] calculatables;
+        public bool[] results;
+        public byte[] resultsBytes;
+        public double[] calculatables;
         protected double calculatable = 0;
 
         private static bool[] baselineResults;

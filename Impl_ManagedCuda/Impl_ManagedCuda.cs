@@ -33,14 +33,16 @@ namespace ProccessorImplementation
 
         public override void Init()
         {
+            int blockSize = 1024; // 256
+
             int N = DataGenerator.InputCount;
             CudaContext cntxt = new CudaContext();
             CUmodule cumodule = cntxt.LoadModule(@"kernel.cubin");
             myKernel = new CudaKernel("proccess", cumodule, cntxt);
             //myKernel.GridDimensions = (N + 255) / 256;
             //myKernel.BlockDimensions = Math.Min(N, 256);
-            myKernel.GridDimensions = (N + 255) / 256;
-            myKernel.BlockDimensions = 256;
+            myKernel.GridDimensions = (N + (blockSize - 1)) / blockSize;
+            myKernel.BlockDimensions = blockSize;
 
             // https://softwarehut.com/blog/general-purpose-computing-gpu-net-world-part-1/
             //https://stackoverflow.com/questions/2392250/understanding-cuda-grid-dimensions-block-dimensions-and-threads-organization-s

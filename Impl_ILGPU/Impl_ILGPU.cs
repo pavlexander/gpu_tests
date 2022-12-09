@@ -12,29 +12,27 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using ILGPU.Algorithms;
+using ILGPU.Runtime.OpenCL;
+using System.IO;
 
 // http://www.ilgpu.net/Documentation
 namespace ProccessorImplementation
 {
     public class Impl_ILGPU : TestsBase
     {
-        private MemoryBuffer<int> input1_dev;
-        private MemoryBuffer<int> input2_dev;
-        private MemoryBuffer<double> input3_dev;
-        private MemoryBuffer<byte> input4_dev;
+        private MemoryBuffer1D<int, Stride1D.Dense> input1_dev;
+        private MemoryBuffer1D<int, Stride1D.Dense> input2_dev;
+        private MemoryBuffer1D<double, Stride1D.Dense> input3_dev;
+        private MemoryBuffer1D<byte, Stride1D.Dense> input4_dev;
 
-        private MemoryBuffer<byte> result_dev;
-        private MemoryBuffer<double> resultCalc_dev;
-
-
-        public Impl_ILGPU() : base("ILGU (CUDA)", true)
-        {
-
-        }
+        private MemoryBuffer1D<byte, Stride1D.Dense> result_dev;
+        private MemoryBuffer1D<double, Stride1D.Dense> resultCalc_dev;
 
         private Context context;
+
         private CudaAccelerator accelerator;
-        private Action<Index,
+
+        private Action<Index1D,
                     ArrayView<byte>,
                     ArrayView<double>,
                     ArrayView<int>,
@@ -43,15 +41,60 @@ namespace ProccessorImplementation
                     ArrayView<byte>,
                     int> myKernel;
 
+
+        public Impl_ILGPU() : base("ILGU (CUDA)", true)
+        {
+
+        }
+
+        private static string GetInfoString(Accelerator a)
+        {
+            StringWriter infoString = new StringWriter();
+            a.PrintInformation(infoString);
+            return infoString.ToString();
+        }
+
         public override void Init()
         {
             GeneratePTX(); // alternative approach through this?
 
-            context = new Context();
-            accelerator = new CudaAccelerator(context);
+            //context = new Context();
+            //accelerator = new CudaAccelerator(context);
+            context = Context.CreateDefault();
+
+            /*
+            // Prints all CPU accelerators.
+            Console.WriteLine("\nListing CPU accelerators:");
+            foreach (CPUDevice d in context.GetCPUDevices())
+            {
+                using CPUAccelerator accelerator = (CPUAccelerator)d.CreateAccelerator(context);
+                Console.WriteLine(accelerator);
+                Console.WriteLine(GetInfoString(accelerator));
+            }
+
+            // Prints all Cuda accelerators.
+            Console.WriteLine("\nListing Cuda accelerators:");
+            foreach (Device d in context.GetCudaDevices())
+            {
+                using Accelerator accelerator = d.CreateAccelerator(context);
+                Console.WriteLine(accelerator);
+                Console.WriteLine(GetInfoString(accelerator));
+            }
+
+            // Prints all OpenCL accelerators.
+            Console.WriteLine("\nListing OpenCL accelerators:");
+            foreach (Device d in context.GetCLDevices())
+            {
+                using Accelerator accelerator = d.CreateAccelerator(context);
+                Console.WriteLine(accelerator);
+                Console.WriteLine(GetInfoString(accelerator));
+            }
+            //var sth = context.GetCLDevices();*/
+
+            accelerator = context.CreateCudaAccelerator(0);
 
             var methodInfo = typeof(Impl_ILGPU).GetMethod(nameof(MyKernel), BindingFlags.Public | BindingFlags.Static);
-            myKernel = accelerator.LoadAutoGroupedStreamKernel<Index,
+            myKernel = accelerator.LoadAutoGroupedStreamKernel<Index1D,
                     ArrayView<byte>,
                     ArrayView<double>,
                     ArrayView<int>,
@@ -62,19 +105,24 @@ namespace ProccessorImplementation
                     >(MyKernel);
 
             // Allocate some memory
-            input1_dev = accelerator.Allocate<int>(DataGenerator.In1.Length);
-            input2_dev = accelerator.Allocate<int>(DataGenerator.In2.Length);
-            input3_dev = accelerator.Allocate<double>(DataGenerator.In3.Length);
-            input4_dev = accelerator.Allocate<byte>(DataGenerator.In4_3_bytes.Length);
+            input1_dev = accelerator.Allocate1D<int>(DataGenerator.In1.Length);
+            input2_dev = accelerator.Allocate1D<int>(DataGenerator.In2.Length);
+            input3_dev = accelerator.Allocate1D<double>(DataGenerator.In3.Length);
+            input4_dev = accelerator.Allocate1D<byte>(DataGenerator.In4_3_bytes.Length);
 
             // init output parameters
-            result_dev = accelerator.Allocate<byte>(resultsBytes.Length);
-            resultCalc_dev = accelerator.Allocate<double>(calculatables.Length);
+            result_dev = accelerator.Allocate1D<byte>(resultsBytes.Length);
+            resultCalc_dev = accelerator.Allocate1D<double>(calculatables.Length);
 
-            input1_dev.CopyFrom(DataGenerator.In1, 0, 0, DataGenerator.In1.Length);
-            input2_dev.CopyFrom(DataGenerator.In2, 0, 0, DataGenerator.In2.Length);
-            input3_dev.CopyFrom(DataGenerator.In3, 0, 0, DataGenerator.In3.Length);
-            input4_dev.CopyFrom(DataGenerator.In4_3_bytes, 0, 0, DataGenerator.In4_3_bytes.Length);
+            //input1_dev.CopyFrom(DataGenerator.In1, 0, 0, DataGenerator.In1.Length);
+            //input2_dev.CopyFrom(DataGenerator.In2, 0, 0, DataGenerator.In2.Length);
+            //input3_dev.CopyFrom(DataGenerator.In3, 0, 0, DataGenerator.In3.Length);
+            //input4_dev.CopyFrom(DataGenerator.In4_3_bytes, 0, 0, DataGenerator.In4_3_bytes.Length);
+
+            input1_dev.CopyFromCPU(DataGenerator.In1);
+            input2_dev.CopyFromCPU(DataGenerator.In2);
+            input3_dev.CopyFromCPU(DataGenerator.In3);
+            input4_dev.CopyFromCPU(DataGenerator.In4_3_bytes);
         }
 
         public override void Dispose()
@@ -96,21 +144,19 @@ namespace ProccessorImplementation
         public void GeneratePTX()
         {
             // test compilation
-            using (var context = new Context())
+            /*using (var context = Context.CreateDefault()) // new Context()
             {
-                context.EnableAlgorithms();
+                //context.EnableAlgorithms();
 
                 using (Backend b = new PTXBackend(context, PTXArchitecture.SM_50, PTXInstructionSet.ISA_50, TargetPlatform.X64))
                 {
                     //using (var unit = context.CreateCompileUnit(b, CompileUnitFlags.None))
                     //{
-                    /*
-                    var compiledKernel = b.Compile(
-                        unit,
-                        typeof(GPU_test_ILGPU).GetMethod(nameof(MyKernel), BindingFlags.Public | BindingFlags.Static));
-
-                    System.IO.File.WriteAllBytes("MyKernel.ptx", compiledKernel.GetBuffer());
-                        */
+                    //  var compiledKernel = b.Compile(
+                    //      unit,
+                    //      typeof(GPU_test_ILGPU).GetMethod(nameof(MyKernel), BindingFlags.Public | BindingFlags.Static));
+                    //  
+                    //  System.IO.File.WriteAllBytes("MyKernel.ptx", compiledKernel.GetBuffer());
 
                     var methods = typeof(Impl_ILGPU).GetMethods(BindingFlags.Static | BindingFlags.Public);
                     var method = methods.FirstOrDefault(f => f.Name == nameof(MyKernel));//.GetMethod(nameof(MyKernel), BindingFlags.Static);
@@ -120,11 +166,11 @@ namespace ProccessorImplementation
                     System.IO.File.WriteAllText("MyKernel.ptx", ptxKernel.PTXAssembly);
                     //}
                 }
-            }
+            }*/
         }
 
         public static void MyKernel(
-                    Index index,
+                    Index1D index,
                     ArrayView<byte> results,
                     ArrayView<double> resultsCalc,
                     ArrayView<int> in1,
@@ -182,7 +228,7 @@ namespace ProccessorImplementation
         }
 
         public static void MyKernel2(
-            Index index, // The global thread index (1D in this case)
+            Index1D index, // The global thread index (1D in this case)
             ArrayView<int> dataView, // A view to a chunk of memory (1D in this case)
             int constant) // A sample uniform constant
         {
@@ -193,45 +239,26 @@ namespace ProccessorImplementation
         // http://www.ilgpu.net/Documentation
         public override void Proccess()
         {
-            myKernel(input1_dev.Length, result_dev.View, resultCalc_dev.View, input1_dev.View, input2_dev.View, input3_dev.View, input4_dev.View, DataGenerator.Width);
+            myKernel((int)input1_dev.Length, result_dev.View, resultCalc_dev.View, input1_dev.View, input2_dev.View, input3_dev.View, input4_dev.View, DataGenerator.Width);
 
             // Wait for the kernel to finish...
             accelerator.Synchronize();
 
             // Resolve data
-            resultsBytes = result_dev.GetAsArray();
-            calculatables = resultCalc_dev.GetAsArray();
+            //resultsBytes = result_dev.GetAsArray();
+            //calculatables = resultCalc_dev.GetAsArray();
+
+            result_dev.CopyToCPU(resultsBytes);
+            resultCalc_dev.CopyToCPU(calculatables);
+            //resultsBytes = result_dev.GetAsArray1D();
+            //calculatables = resultCalc_dev.GetAsArray1D();
         }
 
         public void ProccessOld()
         {
             // Create the required ILGPU context
-            using (var context = new Context())
+            /*using (var context = new Context())
             {
-                /*
-                using (var accelerator = new CPUAccelerator(context))
-                {
-                    // accelerator.LoadAutoGroupedStreamKernel creates a typed launcher
-                    // that implicitly uses the default accelerator stream.
-                    // In order to create a launcher that receives a custom accelerator stream
-                    // use: accelerator.LoadAutoGroupedKernel<Index, ArrayView<int> int>(...)
-                    var myKernel = accelerator.LoadAutoGroupedStreamKernel<Index, ArrayView<int>, int>(MyKernel2);
-
-                    // Allocate some memory
-                    using (var buffer = accelerator.Allocate<int>(1024))
-                    {
-                        // Launch buffer.Length many threads and pass a view to buffer
-                        myKernel(buffer.Length, buffer.View, 42);
-
-                        // Wait for the kernel to finish...
-                        accelerator.Synchronize();
-
-                        // Resolve data
-                        var data = buffer.GetAsArray();
-                        // ...
-                    }
-                }*/
-
                 using (var accelerator = new CudaAccelerator(context)) // test with CPUAccelerator
                 {
                     var methodInfo = typeof(Impl_ILGPU).GetMethod(nameof(MyKernel), BindingFlags.Public | BindingFlags.Static);
@@ -244,15 +271,6 @@ namespace ProccessorImplementation
                             ArrayView<byte>,
                             int
                             >(MyKernel);
-
-                    /*
-                    var myKernel = accelerator.LoadAutoGroupedStreamKernel<Action<Index,
-                            ArrayView<byte>,
-                            ArrayView<int>,
-                            ArrayView<int>,
-                            ArrayView<double>,
-                            ArrayView2D<byte>>>(methodInfo);*/
-
                     // Allocate some memory
                     var input1_dev = accelerator.Allocate<int>(DataGenerator.In1.Length);
                     var input2_dev = accelerator.Allocate<int>(DataGenerator.In2.Length);
@@ -279,36 +297,8 @@ namespace ProccessorImplementation
                     // Resolve data
                     resultsBytes = result_dev.GetAsArray();
                     calculatables = resultCalc_dev.GetAsArray();
-
-                    //d_in1.Dispose();
-                    //d_in1 = null;
-
-                    /*
-                    var kernelWithDefaultStream = accelerator.LoadAutoGroupedStreamKernel<
-                        Index,
-                        ArrayView<bool>,
-                        ArrayView<int>,
-                        ArrayView<int>,
-                        ArrayView<double>,
-                        ArrayView2D<bool>
-                        >(MyKernel);
-
-                    kernelWithDefaultStream(buffer.Extent, buffer.View, 1);
-                    */
-
-                    // Launch buffer.Length many threads and pass a view to buffer
-                    //myKernel(d_in1.Length, d_in1.View, 42);
-
-                    // Wait for the kernel to finish...
-                    //accelerator.Synchronize();
-
-                    // Resolve data
-                    //var data = buffer.GetAsArray();
-                    // ...
-
                 }
-            }
+            }*/
         }
-
     }
 }
