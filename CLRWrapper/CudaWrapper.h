@@ -3,8 +3,10 @@
 //#using <mscorlib.dll>
 //#include "../CudaLib/main.h"
 #include "../CudaLib/kernel.h"
+#include <chrono>
 
 using namespace System;
+//using namespace std::chrono;
 
 namespace CLRLib {
 
@@ -27,6 +29,7 @@ namespace CLRLib {
 			System::Int32 height
 		)
 		{
+			//auto started = std::chrono::high_resolution_clock::now();
 			pin_ptr<unsigned char> h_output = &output[0];
 			unsigned char* h_outputPtr = h_output;
 			size_t output_size = output->Length;
@@ -66,6 +69,8 @@ namespace CLRLib {
 			//System::Console::WriteLine(h_width);
 			//System::Console::WriteLine(h_height);
 			
+			//System::Console::WriteLine("Starting to process");
+
 			int result = CudaProccess(h_outputPtr, output_size,
 				h_outputCalcPtr, outputCalc_size,
 				h_in1Ptr, in1_size,
@@ -74,6 +79,9 @@ namespace CLRLib {
 				h_in4Ptr, in4_size,
 				h_inputCount, h_width, h_height);
 
+			//auto done = std::chrono::high_resolution_clock::now();
+			//std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(done - started).count() << std::endl;
+			
 			return result;
 		};
 	};

@@ -45,7 +45,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -72,8 +72,6 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -87,8 +85,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>
-      </SDLCheck>
+      <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -98,10 +95,13 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <CudaCompile>
-      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
-      <Keep>true</Keep>
       <TargetMachinePlatform>64</TargetMachinePlatform>
+      <Keep>true</Keep>
+      <CodeGeneration>compute_60,sm_60</CodeGeneration>
     </CudaCompile>
+    <PostBuildEvent>
+      <Command>copy /Y "$(ProjectDir)x64\$(ConfigurationName)\kernel.sm_60.cubin" "$(SolutionDir)Impl_ManagedCuda\kernel.cubin"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -146,13 +146,17 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <CudaCompile>
+      <CodeGeneration>compute_60,sm_60</CodeGeneration>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <Keep>true</Keep>
+    </CudaCompile>
+    <PostBuildEvent>
+      <Command>copy /Y "$(ProjectDir)x64\$(ConfigurationName)\kernel.sm_60.cubin" "$(SolutionDir)Impl_ManagedCuda\kernel.cubin"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="kernel.h" />
-    <ClInclude Include="main.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="kernel.cu" />
