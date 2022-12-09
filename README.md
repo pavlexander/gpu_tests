@@ -83,7 +83,7 @@ It is possible to increase number of computation performed by setting the `DataG
 
 ![Image of results](unloaded.png)
 
-If unable to load the project, due to not having the correct `CUDA` version or the `VS` version installed you have to adjust the project file settings manually before reloading the project in solution.
+If unable to load the project, due to not having the correct `CUDA` version or the `VS` platform toolset version installed you have to adjust the project file settings manually before reloading the project in solution.
 
 i.e. this:
 

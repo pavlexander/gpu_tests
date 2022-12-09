@@ -287,9 +287,9 @@ int CudaProccess(
 	int minGridSize;    // The minimum grid size needed to achieve the maximum occupancy for a full device launch 
 	int gridSize;       // The actual grid size needed, based on input size 
 	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, proccess, 0, inputCount);
-	//blockSize 1024
-	//minGridSize 56
-	//gridSize 1024
+	//int blockSize = 1024;
+	//int minGridSize = 56;
+	//int gridSize  = 1024;
 	proccess KERNEL_ARGS2(gridSize, blockSize) (d_output, d_outputCalc, d_in1, d_in2, d_in3, d_in4, inputCount, width, height);
 
 	// Wait for GPU to finish before accessing on host
