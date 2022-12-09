@@ -8,6 +8,15 @@ Testing computations on `GPU`, using `OpenCl`, `CUDA`, in future maybe `Vulkan`.
 * `.NET 6`
 * `CUDA 11.2`
 
+## Tools used and compared
+
+* Parallel for on CPU (https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.parallel.for?view=net-7.0)
+* ManagedCUDA (https://github.com/kunzmi/managedCuda) for CUDA
+* Cloo (https://github.com/clSharp/Cloo) for OpenCL
+* ILGPU (https://github.com/m4rs-mt/ILGPU) also for CUDA
+* C++/CLI wrapper (https://learn.microsoft.com/en-us/cpp/dotnet/walkthrough-compiling-a-cpp-program-that-targets-the-clr-in-visual-studio?view=msvc-170)
+
+
 ## OpenCL
 
 For `OpenCL` I used the `CLEditor` to write and test-compile the kernel. You can also use the `OpenCLTemplate`, I think.
